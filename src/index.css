@@ -1,0 +1,108 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-jakarta: "Plus Jakarta Sans", sans-serif;
+  --font-rubik: "Rubik", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+  font-size: 16px;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 500;
+  color: black;
+  background-color: #f4f4f4;
+}
+
+/* Generic responsive table helpers */
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-min {
+  min-width: 720px;
+}
+
+input,
+textarea {
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+.main-container {
+  width: clamp(320px, 86.53vw, 1246px);
+  margin-left: auto;
+  margin-right: auto;
+  /* padding-top: 1rem; */
+  /* margin-top: clamp(1rem, 1.388vw, 1.5rem) 0; */
+}
+
+/* Hide scrollbar for horizontal scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Admin Layout Responsive Utilities */
+@media (max-width: 768px) {
+  .admin-sidebar-expanded {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    height: 100vh;
+    width: 100vw;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .admin-sidebar-content {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 51;
+    height: 100vh;
+    width: 280px;
+    max-width: 80vw;
+  }
+}
+
+/* Ensure proper spacing on mobile */
+@media (max-width: 640px) {
+  .admin-dashboard-content {
+    padding: 1rem;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1rem;
+  }
+}
+
+/* Improve table responsiveness */
+@media (max-width: 1024px) {
+  .admin-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-table {
+    min-width: 800px;
+  }
+}

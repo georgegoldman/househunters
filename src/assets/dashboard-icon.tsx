@@ -1,0 +1,21 @@
+import type { IconProps } from "../types/icon";
+
+const DashboardIcon: React.FC<IconProps> = ({ isActive = false }) => {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 15 15"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M8.125 5.625V1.875H13.125V5.625H8.125ZM1.875 8.125V1.875H6.875V8.125H1.875ZM8.125 13.125V6.875H13.125V13.125H8.125ZM1.875 13.125V9.375H6.875V13.125H1.875ZM3.125 6.875H5.625V3.125H3.125V6.875ZM9.375 11.875H11.875V8.125H9.375V11.875ZM9.375 4.375H11.875V3.125H9.375V4.375ZM3.125 11.875H5.625V10.625H3.125V11.875Z"
+        fill={isActive ? "black" : "white"}
+        fill-opacity="0.7"
+      />
+    </svg>
+  );
+};
+
+export default DashboardIcon;
