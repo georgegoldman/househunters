@@ -172,6 +172,7 @@ const PropertyPreview = () => {
   // Shimmer states
   const [galleryLoaded, setGalleryLoaded] = useState(false);
   const [agentLoaded, setAgentLoaded] = useState(false);
+  const [headerLoaded, setHeaderLoaded] = useState(false);
 
   // Raw list from API
   const rawImages = useMemo(
@@ -437,29 +438,47 @@ const PropertyPreview = () => {
 
   return (
     <div>
-      <header
-        style={{
-          backgroundImage: `url(${item?.image || Bg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-        className="w-full lg:h-[65vh] h-[50vh] bg-black/70 relative"
-      >
-        <Navbar />
+      <header className="w-full lg:h-[65vh] h-[50vh] relative overflow-hidden">
+  {/* Background image layer with shimmer + dark overlay */}
+  <div className="absolute inset-0">
+    {/* Shimmer while header image loads */}
+    {!headerLoaded && (
+      <SkeletonBlock className="w-full h-full rounded-none" />
+    )}
 
-        <div className="flex flex-col gap-[clamp(0.5rem,2vw,0.75rem)] main-container mt-[clamp(4rem,8vw,6.25rem)]">
-          <h3 className="font-bold text-[clamp(1.75rem,4vw,2.25rem)] text-white">
-            Product Preview
-          </h3>
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-white py-[clamp(0.5rem,1.5vw,0.75rem)] px-[clamp(0.75rem,2vw,1rem)] rounded-[clamp(0.5rem,1vw,0.75rem)] w-fit h-fit font-bold text-[clamp(1rem,2.5vw,1.25rem)] flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)] text-black hover:bg-gray-100"
-          >
-            <ArrowLeft />
-            Back
-          </button>
-        </div>
-      </header>
+    <img
+      src={item?.image || Bg}
+      alt="Property hero background"
+      onLoad={() => setHeaderLoaded(true)}
+      onError={() => setHeaderLoaded(true)}
+      className={`w-full h-full object-cover transition-opacity duration-700 ${
+        headerLoaded ? "opacity-100" : "opacity-0"
+      }`}
+    />
+
+    {/* Dark overlay to keep text readable */}
+    <div className="absolute inset-0 bg-black/70" />
+  </div>
+
+  {/* Foreground content */}
+  <div className="relative z-10">
+    <Navbar />
+
+    <div className="flex flex-col gap-[clamp(0.5rem,2vw,0.75rem)] main-container mt-[clamp(4rem,8vw,6.25rem)]">
+      <h3 className="font-bold text-[clamp(1.75rem,4vw,2.25rem)] text-white">
+        Product Preview
+      </h3>
+      <button
+        onClick={() => navigate(-1)}
+        className="bg-white py-[clamp(0.5rem,1.5vw,0.75rem)] px-[clamp(0.75rem,2vw,1rem)] rounded-[clamp(0.5rem,1vw,0.75rem)] w-fit h-fit font-bold text-[clamp(1rem,2.5vw,1.25rem)] flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)] text-black hover:bg-gray-100"
+      >
+        <ArrowLeft />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
+
 
       <main className="flex flex-col lg:flex-row  lg:items-start gap-[clamp(1rem,4vw,2rem)] main-container py-[clamp(2rem,5vw,3rem)]">
         {/* ====== Property Image Section ====== */}
