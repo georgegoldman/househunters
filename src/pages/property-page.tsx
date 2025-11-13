@@ -12,7 +12,7 @@ import {
 import { api } from "../lib/api";
 import Footer from "../components/footer";
 import Navbar from "../components/navbar";
-import Bg from "../assets/gustavo-zambelli-nEvzSXBIhiU-unsplash.jpg";
+import Bg from "../../public/gustavo-zambelli-nEvzSXBIhiU-unsplash.jpg";
 import ArrowLeft from "../assets/arrow-left";
 import { extractPrice } from "../utils/currency";
 

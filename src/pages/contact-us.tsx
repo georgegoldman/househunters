@@ -3,7 +3,7 @@ import XIcon from "../assets/x-icon";
 import YtIcon from "../assets/yt-icon";
 import Footer from "../components/footer";
 import Navbar from "../components/navbar";
-import Bg from "../assets/getty-images-65hpgg9V49A-unsplash.jpg";
+import Bg from "../../public/getty-images-65hpgg9V49A-unsplash.jpg";
 import ArrowLeft from "../assets/arrow-left";
 import { useNavigate } from "react-router-dom";
 

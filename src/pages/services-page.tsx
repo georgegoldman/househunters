@@ -1,5 +1,5 @@
 import Navbar from "../components/navbar";
-import Bg from "../assets/jakub-zerdzicki-UlDvTJ4zc-g-unsplash.jpg";
+import Bg from "../../public/jakub-zerdzicki-UlDvTJ4zc-g-unsplash.jpg";
 import ArrowLeft from "../assets/arrow-left";
 import { useNavigate } from "react-router-dom";
 import ListIcon from "../assets/list-icon";

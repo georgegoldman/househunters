@@ -2,7 +2,7 @@ import ArrowLeft from "../assets/arrow-left";
 import Navbar from "../components/navbar";
 import Bg from "../assets/kelly-sikkema-zcAgxLryKe4-unsplash.jpg";
 import { useNavigate } from "react-router-dom";
-import SellBuyImage from "../assets/igor-lolatto-TdwYsTmA2Bc-unsplash.jpg";
+import SellBuyImage from "../../public/igor-lolatto-TdwYsTmA2Bc-unsplash.jpg";
 import SmartSearchIcon from "../assets/smart-search-icon";
 import ListIcon from "../assets/list-icon";
 import ChatIcon from "../assets/chat-icon";

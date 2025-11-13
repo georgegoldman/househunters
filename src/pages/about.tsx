@@ -1,10 +1,10 @@
 import React from "react";
 import ArrowLeft from "../assets/arrow-left";
 import Navbar from "../components/navbar";
-import Bg from "../assets/vitaly-gariev-VbQJfoArSHc-unsplash.jpg";
+import Bg from "../../public/vitaly-gariev-VbQJfoArSHc-unsplash.jpg";
 import { useNavigate } from "react-router-dom";
-import Banner from "../assets/vitaly-gariev-DOXaUBo59Y8-unsplash.jpg";
-import Mission from "../assets/emmanuel-gido-zTs2M5283D4-unsplash.jpg";
+import Banner from "../../public/vitaly-gariev-DOXaUBo59Y8-unsplash.jpg";
+import Mission from "../../public/emmanuel-gido-zTs2M5283D4-unsplash.jpg";
 import StarIconAbout from "../assets/star-icon-about";
 import Bulb from "../assets/bulb";
 import UserGroup from "../assets/user-group";
