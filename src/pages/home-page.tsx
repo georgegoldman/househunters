@@ -1,5 +1,5 @@
 import Navbar from "../components/navbar";
-import Bg from "../assets/getty-images-sb9nfWeSuxA-unsplash.jpg";
+import Bg from "../../public/getty-images-sb9nfWeSuxA-unsplash.jpg";
 // import SearchWidget from "./search-widget";
 import StatsSection from "../components/stats-section";
 import PropertiesSection from "../components/properties-section";
