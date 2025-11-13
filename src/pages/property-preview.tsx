@@ -12,7 +12,6 @@ import SofaIcon from "../assets/sofa-icon";
 import SquareMeterIcon from "../assets/square-meter-icon";
 import ShareIcon from "../assets/share-icon";
 import UserIcon from "../assets/user-icon";
-// import RequestReviewModal from "./request-review-modal"; // Keep your existing modal
 import {
   toPropertyCard,
   type ApiProperty,
@@ -25,6 +24,12 @@ import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import Bg from "../assets/bg-image.jpg";
 import SuccessModal from "../components/success-modal";
+
+/* ----------------------------- shimmer helper ----------------------------- */
+
+const SkeletonBlock = ({ className = "" }: { className?: string }) => (
+  <div className={`bg-gray-200/80 animate-pulse rounded-md ${className}`} />
+);
 
 /* ----------------------------- helpers ----------------------------- */
 function normalizeUrl(u: string) {
@@ -65,7 +70,6 @@ async function validateImage(
 function toViewingRequestPayload(
   formValues: any
 ): CreatePropertyRequestPayload {
-  // Handle different form field names that your existing modal might use
   const firstName =
     formValues.firstName ||
     formValues.first_name ||
@@ -77,7 +81,6 @@ function toViewingRequestPayload(
     formValues.name?.split(" ")?.slice(1)?.join(" ") ||
     "";
 
-  // Handle full name if provided instead of separate first/last
   if (!firstName && !lastName && formValues.fullName) {
     const nameParts = formValues.fullName.trim().split(/\s+/);
     const first = nameParts[0] || "";
@@ -166,6 +169,10 @@ const PropertyPreview = () => {
   const [liked, setLiked] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Shimmer states
+  const [galleryLoaded, setGalleryLoaded] = useState(false);
+  const [agentLoaded, setAgentLoaded] = useState(false);
+
   // Raw list from API
   const rawImages = useMemo(
     () => (item?.images ?? []).filter(Boolean),
@@ -200,6 +207,12 @@ const PropertyPreview = () => {
       cancelled = true;
     };
   }, [normalizedImages, id]);
+
+  // Reset shimmers when id changes
+  useEffect(() => {
+    setGalleryLoaded(false);
+    setAgentLoaded(false);
+  }, [id]);
 
   // Keep index in bounds
   useEffect(() => {
@@ -248,19 +261,6 @@ const PropertyPreview = () => {
   const handleShare = () => {
     setIsShareModalOpen(true);
   };
-
-  // Handle modal submission
-  // const handleModalSubmit = async (formData: any): Promise<void> => {
-  //   try {
-  //     // Here you would typically make an API call to submit the viewing request
-  //     console.log("Submitting viewing request:", formData);
-  //     // Simulate API call
-  //     await new Promise((resolve) => setTimeout(resolve, 1000));
-  //   } catch (error) {
-  //     console.error("Error submitting viewing request:", error);
-  //     throw error;
-  //   }
-  // };
 
   // Fetch property
   useEffect(() => {
@@ -343,6 +343,10 @@ const PropertyPreview = () => {
     };
   }, [isLightboxOpen]);
 
+  const handleGalleryLoaded = () => {
+    setGalleryLoaded(true);
+  };
+
   const handleModalSubmit = async (formData: any) => {
     await handleCreateViewingRequest(formData);
   };
@@ -354,11 +358,9 @@ const PropertyPreview = () => {
       return;
     }
 
-    // Transform form data to match API structure
     const payload: CreatePropertyRequestPayload =
       toViewingRequestPayload(formValues);
 
-    // Enhanced client-side validation
     if (!payload.firstName.trim() || !payload.lastName.trim()) {
       setToast({ ok: false, msg: "Please provide both first and last name." });
       return;
@@ -391,7 +393,6 @@ const PropertyPreview = () => {
         payload,
       });
 
-      // Use your existing API structure
       const result = await api.propertyRequests.create(
         Number(item.id),
         payload
@@ -401,7 +402,6 @@ const PropertyPreview = () => {
 
       setIsModalOpen(false);
       setShowSuccess(true);
-      // setToast({ ok: true, msg: "Request sent! We'll contact you shortly." });
     } catch (e: any) {
       console.error("Error submitting viewing request:", e);
       const msg =
@@ -411,7 +411,6 @@ const PropertyPreview = () => {
       setToast({ ok: false, msg });
     } finally {
       setSubmitting(false);
-      // auto-hide toast
       setTimeout(() => setToast(null), 4500);
     }
   };
@@ -440,7 +439,7 @@ const PropertyPreview = () => {
     <div>
       <header
         style={{
-          backgroundImage: `url(${item?.image})`,
+          backgroundImage: `url(${item?.image || Bg})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -465,184 +464,224 @@ const PropertyPreview = () => {
       <main className="flex flex-col lg:flex-row  lg:items-start gap-[clamp(1rem,4vw,2rem)] main-container py-[clamp(2rem,5vw,3rem)]">
         {/* ====== Property Image Section ====== */}
         <section className="w-full lg:w-[clamp(25rem,45vw,41.75rem)] relative">
-          {/* --- Mobile slider --- */}
-          <div
-            className="lg:hidden w-full h-[clamp(10rem,100vh,18rem)] rounded-[clamp(0.75rem,2vw,1.25rem)] overflow-hidden relative cursor-pointer"
-            onClick={() => openLightbox(currentImageIndex)}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          >
-            <img
-              key={currentSrc}
-              src={currentSrc}
-              onError={() => {
-                if (validatedImages.length > 1) {
-                  setCurrentImageIndex((i) => (i + 1) % validatedImages.length);
-                }
-              }}
-              loading="eager"
-              decoding="async"
-              className="w-full h-full object-cover transition-opacity duration-500"
-              alt={`${id ?? "property"} view ${
-                validatedImages.length ? currentImageIndex + 1 : 1
-              }`}
-            />
-
-            {/* Dots */}
-            {validatedImages.length > 1 && (
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                {validatedImages.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCurrentImageIndex(index);
-                    }}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      index === currentImageIndex ? "bg-white" : "bg-white/50"
-                    }`}
-                    aria-label={`Go to image ${index + 1}`}
-                  />
-                ))}
+          {/* Shimmer overlay while gallery is not loaded */}
+          {!galleryLoaded && (
+            <div className="absolute inset-0 z-10 pointer-events-none">
+              <div className="hidden lg:block h-[clamp(22rem,55vh,34rem)]">
+                <SkeletonBlock className="w-full h-full rounded-[0.75rem]" />
               </div>
-            )}
+              <div className="lg:hidden h-[clamp(10rem,100vh,18rem)]">
+                <SkeletonBlock className="w-full h-full rounded-[0.75rem]" />
+              </div>
+            </div>
+          )}
 
-            {/* Pause/Play */}
-            {validatedImages.length > 1 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsPaused((p) => !p);
-                }}
-                className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
-                aria-label={isPaused ? "Resume slideshow" : "Pause slideshow"}
-              >
-                {isPaused ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M8 5V19L19 12L8 5Z" fill="currentColor" />
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M6 4H10V20H6V4ZM14 4H18V20H14V4Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                )}
-              </button>
-            )}
-
-            {/* Manual Navigation Controls */}
-            {validatedImages.length > 1 && (
-              <>
-                {/* Previous Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex((prev) =>
-                      prev === 0 ? validatedImages.length - 1 : prev - 1
-                    );
-                  }}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors z-10"
-                  aria-label="Previous image"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M15 19l-7-7 7-7"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-
-                {/* Next Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex(
-                      (prev) => (prev + 1) % validatedImages.length
-                    );
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors z-10"
-                  aria-label="Next image"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M9 5l7 7-7 7"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* --- Desktop: Booking-style gallery (1 big + up to 4 thumbs) --- */}
-          <div className="hidden lg:grid grid-cols-3 grid-rows-2 gap-2 h-[clamp(22rem,55vh,34rem)]">
-            {/* Hero (spans 2x2) */}
-            <button
-              type="button"
-              onClick={() => openLightbox(0)}
-              className="relative col-span-2 row-span-2 rounded-[0.75rem] overflow-hidden group"
-              aria-label="Open main photo"
+          {/* Real gallery */}
+          <div
+            className={`transition-opacity duration-500 ${
+              galleryLoaded ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {/* --- Mobile slider --- */}
+            <div
+              className="lg:hidden w-full h-[clamp(10rem,100vh,18rem)] rounded-[clamp(0.75rem,2vw,1.25rem)] overflow-hidden relative cursor-pointer"
+              onClick={() => openLightbox(currentImageIndex)}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
             >
               <img
-                src={heroSrc}
-                alt="Main property photo"
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                key={currentSrc}
+                src={currentSrc}
+                onLoad={handleGalleryLoaded}
+                onError={handleGalleryLoaded}
                 loading="eager"
                 decoding="async"
+                className="w-full h-full object-cover transition-opacity duration-500"
+                alt={`${id ?? "property"} view ${
+                  validatedImages.length ? currentImageIndex + 1 : 1
+                }`}
               />
-            </button>
 
-            {/* Thumbnails */}
-            {thumbSrcs.map((src, i) => {
-              const isLastThumb = i === thumbSrcs.length - 1;
-              const idx = i + 1;
-              return (
+              {/* Dots */}
+              {validatedImages.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                  {validatedImages.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImageIndex(index);
+                      }}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        index === currentImageIndex
+                          ? "bg-white"
+                          : "bg-white/50"
+                      }`}
+                      aria-label={`Go to image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Pause/Play */}
+              {validatedImages.length > 1 && (
                 <button
-                  type="button"
-                  key={src + i}
-                  onClick={() => openLightbox(idx)}
-                  className="relative rounded-[0.5rem] overflow-hidden group"
-                  aria-label={`Open photo ${idx + 1}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsPaused((p) => !p);
+                  }}
+                  className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
+                  aria-label={isPaused ? "Resume slideshow" : "Pause slideshow"}
                 >
-                  <img
-                    src={src}
-                    alt={`Property photo ${idx + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  {/* "+N photos" overlay */}
-                  {isLastThumb && remainingCount > 0 && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <span className="text-white text-sm font-semibold px-3 py-1 rounded-full border border-white/60">
-                        +{remainingCount} photos
-                      </span>
-                    </div>
+                  {isPaused ? (
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path d="M8 5V19L19 12L8 5Z" fill="currentColor" />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M6 4H10V20H6V4ZM14 4H18V20H14V4Z"
+                        fill="currentColor"
+                      />
+                    </svg>
                   )}
                 </button>
-              );
-            })}
+              )}
 
-            {/* Fillers if fewer than 4 thumbs */}
-            {thumbSrcs.length < 4 &&
-              Array.from({ length: 4 - thumbSrcs.length }).map((_, idx) => (
-                <div
-                  key={`ph-${idx}`}
-                  className="rounded-[0.5rem] bg-gray-100 border border-gray-200"
-                  aria-hidden
+              {/* Manual Navigation Controls */}
+              {validatedImages.length > 1 && (
+                <>
+                  {/* Previous Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImageIndex((prev) =>
+                        prev === 0 ? validatedImages.length - 1 : prev - 1
+                      );
+                    }}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors z-10"
+                    aria-label="Previous image"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M15 19l-7-7 7-7"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImageIndex(
+                        (prev) => (prev + 1) % validatedImages.length
+                      );
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors z-10"
+                    aria-label="Next image"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M9 5l7 7-7 7"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* --- Desktop: Booking-style gallery (1 big + up to 4 thumbs) --- */}
+            <div className="hidden lg:grid grid-cols-3 grid-rows-2 gap-2 h-[clamp(22rem,55vh,34rem)]">
+              {/* Hero (spans 2x2) */}
+              <button
+                type="button"
+                onClick={() => openLightbox(0)}
+                className="relative col-span-2 row-span-2 rounded-[0.75rem] overflow-hidden group"
+                aria-label="Open main photo"
+              >
+                <img
+                  src={heroSrc}
+                  alt="Main property photo"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                  loading="eager"
+                  decoding="async"
+                  onLoad={handleGalleryLoaded}
+                  onError={handleGalleryLoaded}
                 />
-              ))}
+              </button>
+
+              {/* Thumbnails */}
+              {thumbSrcs.map((src, i) => {
+                const isLastThumb = i === thumbSrcs.length - 1;
+                const idx = i + 1;
+                return (
+                  <button
+                    type="button"
+                    key={src + i}
+                    onClick={() => openLightbox(idx)}
+                    className="relative rounded-[0.5rem] overflow-hidden group"
+                    aria-label={`Open photo ${idx + 1}`}
+                  >
+                    <img
+                      src={src}
+                      alt={`Property photo ${idx + 1}`}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    {/* "+N photos" overlay */}
+                    {isLastThumb && remainingCount > 0 && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="text-white text-sm font-semibold px-3 py-1 rounded-full border border-white/60">
+                          +{remainingCount} photos
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+
+              {/* Fillers if fewer than 4 thumbs */}
+              {thumbSrcs.length < 4 &&
+                Array.from({ length: 4 - thumbSrcs.length }).map((_, idx) => (
+                  <div
+                    key={`ph-${idx}`}
+                    className="rounded-[0.5rem] bg-gray-100 border border-gray-200"
+                    aria-hidden
+                  />
+                ))}
+            </div>
           </div>
 
           {/* Status Badge */}
@@ -719,17 +758,26 @@ const PropertyPreview = () => {
             {/* Agent Info */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-[clamp(0.75rem,2vw,1rem)] pb-[clamp(0.5rem,1.5vw,0.75rem)] border-b border-black/10">
               <div className="flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)]">
-                {item?.agent?.avatar ? (
-                  <img
-                    src={item.agent.avatar}
-                    className="w-[clamp(2rem,4vw,3rem)] h-[clamp(2rem,4vw,3rem)] rounded-full object-cover"
-                    alt={`${item.agent.name ?? "Agent"} profile picture`}
-                  />
-                ) : (
-                  <div className="w-[clamp(2rem,4vw,3rem)] h-[clamp(2rem,4vw,3rem)] rounded-full bg-gray-200 flex items-center justify-center">
-                    <UserIcon isActive={true} />
-                  </div>
-                )}
+                <div className="relative">
+                  {!agentLoaded && (
+                    <SkeletonBlock className="w-[clamp(2rem,4vw,3rem)] h-[clamp(2rem,4vw,3rem)] rounded-full" />
+                  )}
+                  {item?.agent?.avatar ? (
+                    <img
+                      src={item.agent.avatar}
+                      onLoad={() => setAgentLoaded(true)}
+                      onError={() => setAgentLoaded(true)}
+                      className={`w-[clamp(2rem,4vw,3rem)] h-[clamp(2rem,4vw,3rem)] rounded-full object-cover transition-opacity duration-500 ${
+                        agentLoaded ? "opacity-100" : "opacity-0"
+                      }`}
+                      alt={`${item.agent.name ?? "Agent"} profile picture`}
+                    />
+                  ) : (
+                    <div className="w-[clamp(2rem,4vw,3rem)] h-[clamp(2rem,4vw,3rem)] rounded-full bg-gray-200 flex items-center justify-center">
+                      <UserIcon isActive={true} />
+                    </div>
+                  )}
+                </div>
                 <p className="text-[clamp(1rem,2.5vw,1.25rem)] text-black/70">
                   {item?.agent?.name || "Agent"}
                 </p>
@@ -911,14 +959,12 @@ const PropertyPreview = () => {
         </div>
       )}
 
-      {/* Use your existing modal with proper API integration */}
       <RequestReviewModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleModalSubmit}
       />
 
-      {/* Share Modal */}
       <ShareModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
